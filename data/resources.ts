@@ -29,7 +29,7 @@ export const RESOURCE_CATEGORIES: ResourceCategory[] = [
     category: 'Information',
     links: [
       { name: 'HR Policies', url: 'https://docs.google.com/document/d/19w6-EiKiyQcsTNOFZSoPc0kE7uQ8KIz-/preview', description: 'Find the latest HR policies and employee handbook.' },
-      { name: 'Company Calendar', url: 'https://calendar.google.com', description: 'View the official company calendar for events and holidays.' },
+      { name: 'Company Calendar', url: 'https://calendar.google.com/calendar/u/0/embed?color=%239fe1e7&src=k.j@peaceoutpost.icu', description: 'View the official company calendar for events and holidays.' },
     ]
   }
 ];
