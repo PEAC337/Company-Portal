@@ -1,18 +1,10 @@
-
 import React from 'react';
 
-export const CompanyLogo: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-  <svg
+// This component now renders the official seal image.
+export const CompanyLogo: React.FC<React.ImgHTMLAttributes<HTMLImageElement>> = (props) => (
+  <img
     {...props}
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    aria-hidden="true"
-  >
-    <path
-      fillRule="evenodd"
-      d="M4.5 3.75a3 3 0 00-3 3v.75h21v-.75a3 3 0 00-3-3h-15zM21 9.75H3v10.5a3 3 0 003 3h15a3 3 0 003-3V9.75z"
-      clipRule="evenodd"
-    />
-  </svg>
+    src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/United_States_Department_of_Defense_Seal.svg/200px-United_States_Department_of_Defense_Seal.svg.png"
+    alt="U.S. Ministry of Defense Seal"
+  />
 );
