@@ -1,0 +1,5 @@
+{
+  "name": "Company Portal",
+  "description": "A dedicated portal providing secure access to the company's internal Google Site and resources.",
+  "requestFramePermissions": []
+}
