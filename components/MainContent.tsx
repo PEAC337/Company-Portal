@@ -13,6 +13,7 @@ import { PolicyIcon } from './icons/PolicyIcon';
 import { CalendarIcon } from './icons/CalendarIcon';
 import { TrainingIcon } from './icons/TrainingIcon';
 import { FmcsaIcon } from './icons/FmcsaIcon';
+import { UsmobileIcon } from './icons/UsmobileIcon';
 
 // IMPORTANT: Replace this with the actual URL of your company's Google Site.
 const GOOGLE_SITE_URL = 'https://sites.google.com/peaceoutpost.icu/fedcorp/base-camp';
@@ -41,6 +42,8 @@ const ResourceIcon: React.FC<{ icon?: string }> = ({ icon }) => {
       return <TrainingIcon className={iconClasses} />;
     case 'fmcsa':
       return <FmcsaIcon className={iconClasses} />;
+    case 'usmobile':
+      return <UsmobileIcon className={iconClasses} />;
     default:
       return null;
   }

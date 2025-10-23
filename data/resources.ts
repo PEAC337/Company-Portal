@@ -2,7 +2,7 @@ export interface ResourceLink {
   name: string;
   url: string;
   description: string;
-  icon?: 'drive' | 'docs' | 'slack' | 'design' | 'policy' | 'calendar' | 'training' | 'fmcsa';
+  icon?: 'drive' | 'docs' | 'slack' | 'design' | 'policy' | 'calendar' | 'training' | 'fmcsa' | 'usmobile';
 }
 
 export interface ResourceCategory {
@@ -26,6 +26,7 @@ export const RESOURCE_CATEGORIES: ResourceCategory[] = [
       { name: 'Design System', url: 'https://www.canva.com/design-school', description: 'Learn about design principles and tools at Canva Design School.', icon: 'design' },
       { name: 'COPS Training Portal', url: 'https://copstrainingportal.org/elearning/', description: 'Access the Community Oriented Policing Services e-learning platform.', icon: 'training' },
       { name: 'FMCSA Company Snapshot', url: 'https://safer.fmcsa.dot.gov/CompanySnapshot.aspx', description: 'Look up company safety data from the Federal Motor Carrier Safety Administration.', icon: 'fmcsa' },
+      { name: 'US Mobile Dashboard', url: 'https://app.usmobile.com/dashboard/auth', description: 'Access the US Mobile dashboard for device and plan management.', icon: 'usmobile' },
     ]
   },
   {
