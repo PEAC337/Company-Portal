@@ -2,7 +2,7 @@ export interface ResourceLink {
   name: string;
   url: string;
   description: string;
-  icon?: 'drive' | 'docs' | 'slack' | 'design' | 'policy' | 'calendar';
+  icon?: 'drive' | 'docs' | 'slack' | 'design' | 'policy' | 'calendar' | 'training' | 'fmcsa';
 }
 
 export interface ResourceCategory {
@@ -24,6 +24,8 @@ export const RESOURCE_CATEGORIES: ResourceCategory[] = [
     links: [
       { name: 'IT Support', url: 'https://app.slack.com/client/T08EY37623B/C09MYHM2SD7', description: 'Contact IT Support on our designated Slack channel.', icon: 'slack' },
       { name: 'Design System', url: 'https://www.canva.com/design-school', description: 'Learn about design principles and tools at Canva Design School.', icon: 'design' },
+      { name: 'COPS Training Portal', url: 'https://copstrainingportal.org/elearning/', description: 'Access the Community Oriented Policing Services e-learning platform.', icon: 'training' },
+      { name: 'FMCSA Company Snapshot', url: 'https://safer.fmcsa.dot.gov/CompanySnapshot.aspx', description: 'Look up company safety data from the Federal Motor Carrier Safety Administration.', icon: 'fmcsa' },
     ]
   },
   {
