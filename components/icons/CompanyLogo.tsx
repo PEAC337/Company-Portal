@@ -1,10 +1,11 @@
 import React from 'react';
 
 // This component now renders the official seal image.
-export const CompanyLogo: React.FC<React.ImgHTMLAttributes<HTMLImageElement>> = (props) => (
+export const CompanyLogo: React.FC<React.ImgHTMLAttributes<HTMLImageElement>> = ({ className, ...rest }) => (
   <img
-    {...props}
-    src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/United_States_Department_of_Defense_Seal.svg/200px-United_States_Department_of_Defense_Seal.svg.png"
-    alt="U.S. Ministry of Defense Seal"
+    {...rest}
+    className={`object-contain ${className || ''}`}
+    src="https://i.ibb.co/hLqjC0F/The-United-States-Ministry-of-Defense.png"
+    alt="The United States Ministry of Defense Seal"
   />
 );

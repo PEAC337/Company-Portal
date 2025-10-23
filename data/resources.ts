@@ -2,6 +2,7 @@ export interface ResourceLink {
   name: string;
   url: string;
   description: string;
+  icon?: 'drive' | 'docs' | 'slack' | 'design' | 'policy' | 'calendar';
 }
 
 export interface ResourceCategory {
@@ -14,22 +15,22 @@ export const RESOURCE_CATEGORIES: ResourceCategory[] = [
   {
     category: 'Documents',
     links: [
-      { name: 'Shared Drives', url: 'https://drive.google.com/drive/starred', description: 'Access starred files in Google Drive to designate tasks.' },
-      { name: 'Project Plans', url: 'https://docs.google.com/document/d/1QoJyZU8px1M2JkaZhH-OYZzGD2DNnE2D8LDr14GSI0A/preview', description: 'View all project planning documents.' },
+      { name: 'Shared Drives', url: 'https://drive.google.com/drive/starred', description: 'Access starred files in Google Drive to designate tasks.', icon: 'drive' },
+      { name: 'Project Plans', url: 'https://docs.google.com/document/d/1QoJyZU8px1M2JkaZhH-OYZzGD2DNnE2D8LDr14GSI0A/preview', description: 'View all project planning documents.', icon: 'docs' },
     ]
   },
   {
     category: 'Tools',
     links: [
-      { name: 'IT Support', url: 'https://app.slack.com/client/T08EY37623B/C09MYHM2SD7', description: 'Contact IT Support on our designated Slack channel.' },
-      { name: 'Design System', url: 'https://www.canva.com/design-school', description: 'Learn about design principles and tools at Canva Design School.' },
+      { name: 'IT Support', url: 'https://app.slack.com/client/T08EY37623B/C09MYHM2SD7', description: 'Contact IT Support on our designated Slack channel.', icon: 'slack' },
+      { name: 'Design System', url: 'https://www.canva.com/design-school', description: 'Learn about design principles and tools at Canva Design School.', icon: 'design' },
     ]
   },
   {
     category: 'Information',
     links: [
-      { name: 'HR Policies', url: 'https://docs.google.com/document/d/19w6-EiKiyQcsTNOFZSoPc0kE7uQ8KIz-/preview', description: 'Find the latest HR policies and employee handbook.' },
-      { name: 'Company Calendar', url: 'https://calendar.google.com/calendar/u/0/embed?color=%239fe1e7&src=k.j@peaceoutpost.icu', description: 'View the official company calendar for events and holidays.' },
+      { name: 'HR Policies', url: 'https://docs.google.com/document/d/19w6-EiKiyQcsTNOFZSoPc0kE7uQ8KIz-/preview', description: 'Find the latest HR policies and employee handbook.', icon: 'policy' },
+      { name: 'Company Calendar', url: 'https://calendar.google.com/calendar/u/0/embed?color=%239fe1e7&src=k.j@peaceoutpost.icu', description: 'View the official company calendar for events and holidays.', icon: 'calendar' },
     ]
   }
 ];

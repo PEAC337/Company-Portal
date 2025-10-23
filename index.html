@@ -1,9 +1,18 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>U.S. Ministry Portal</title>
+    
+    <!-- Mobile & PWA Optimizations -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#083344">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/hLqjC0F/The-United-States-Ministry-of-Defense.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,6 +31,7 @@
                           linear-gradient(to right, rgba(203, 213, 225, 0.05) 1px, transparent 1px);
         background-size: 100% 100%, 3rem 3rem, 3rem 3rem;
         background-attachment: fixed; /* Keep the background fixed during scroll */
+        -webkit-tap-highlight-color: transparent; /* Remove tap highlight on iOS */
       }
     </style>
 <script type="importmap">

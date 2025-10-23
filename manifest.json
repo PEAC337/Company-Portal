@@ -1,0 +1,21 @@
+
+{
+  "short_name": "Ministry Portal",
+  "name": "U.S. Ministry Portal",
+  "icons": [
+    {
+      "src": "https://i.ibb.co/hLqjC0F/The-United-States-Ministry-of-Defense.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://i.ibb.co/hLqjC0F/The-United-States-Ministry-of-Defense.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#083344",
+  "background_color": "#020617"
+}
