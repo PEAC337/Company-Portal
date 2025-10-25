@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import MainContent from './components/MainContent';
 import Footer from './components/Footer';
+import Chatbot from './components/Chatbot';
 import { RESOURCE_CATEGORIES, ResourceCategory } from './data/resources';
 
 const App: React.FC = () => {
@@ -56,6 +57,7 @@ const App: React.FC = () => {
       <Header searchTerm={searchTerm} onSearchChange={setSearchTerm} />
       <MainContent resources={filteredResources} isLoading={isLoading} />
       <Footer />
+      <Chatbot />
     </div>
   );
 };

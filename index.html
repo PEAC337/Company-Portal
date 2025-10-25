@@ -4,12 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>U.S. Ministry Portal</title>
-    <link rel="icon" type="image/png" href="https://i.ibb.co/hLqjC0F/The-United-States-Ministry-of-Defense.png" />
     
+    <!-- Favicon -->
+    <link rel="icon" href="https://i.ibb.co/hLqjC0F/The-United-States-Ministry-of-Defense.png" type="image/png" />
+    <link rel="shortcut icon" href="https://i.ibb.co/hLqjC0F/The-United-States-Ministry-of-Defense.png" type="image/png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="https://i.ibb.co/hLqjC0F/The-United-States-Ministry-of-Defense.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="https://i.ibb.co/hLqjC0F/The-United-States-Ministry-of-Defense.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="https://i.ibb.co/hLqjC0F/The-United-States-Ministry-of-Defense.png" />
+
     <!-- Mobile & PWA Optimizations -->
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#083344">
-    <link rel="apple-touch-icon" href="https://i.ibb.co/hLqjC0F/The-United-States-Ministry-of-Defense.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
@@ -33,13 +38,44 @@
         background-attachment: fixed; /* Keep the background fixed during scroll */
         -webkit-tap-highlight-color: transparent; /* Remove tap highlight on iOS */
       }
+      
+      @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      @keyframes counter-rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(-360deg); }
+      }
+      .orrery-container {
+        min-height: 750px;
+      }
+      @media (max-width: 800px) {
+        .orrery-container {
+            transform: scale(0.8);
+            min-height: 600px;
+        }
+      }
+      @media (max-width: 640px) {
+          .orrery-container {
+              transform: scale(0.6);
+              min-height: 480px;
+          }
+      }
+      @media (max-width: 480px) {
+          .orrery-container {
+              transform: scale(0.45);
+              min-height: 380px;
+          }
+      }
     </style>
 <script type="importmap">
 {
   "imports": {
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "@google/genai": "https://esm.run/@google/genai"
   }
 }
 </script>

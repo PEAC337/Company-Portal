@@ -3,17 +3,8 @@ import { ExternalLinkIcon } from './icons/ExternalLinkIcon';
 import { WarningIcon } from './icons/WarningIcon';
 import { ResourceCategory } from '../data/resources';
 import { SpinnerIcon } from './icons/SpinnerIcon';
-import ConfirmationDialog from './ConfirmationDialog'; // Import the new component
-
-import { DriveIcon } from './icons/DriveIcon';
-import { DocsIcon } from './icons/DocsIcon';
-import { SlackIcon } from './icons/SlackIcon';
-import { DesignIcon } from './icons/DesignIcon';
-import { PolicyIcon } from './icons/PolicyIcon';
-import { CalendarIcon } from './icons/CalendarIcon';
-import { TrainingIcon } from './icons/TrainingIcon';
-import { FmcsaIcon } from './icons/FmcsaIcon';
-import { UsmobileIcon } from './icons/UsmobileIcon';
+import ConfirmationDialog from './ConfirmationDialog';
+import DataOrrery from './DataOrrery';
 
 // IMPORTANT: Replace this with the actual URL of your company's Google Site.
 const GOOGLE_SITE_URL = 'https://sites.google.com/peaceoutpost.icu/fedcorp/base-camp';
@@ -22,32 +13,6 @@ interface MainContentProps {
   resources: ResourceCategory[];
   isLoading: boolean;
 }
-
-const ResourceIcon: React.FC<{ icon?: string }> = ({ icon }) => {
-  const iconClasses = "h-6 w-6 mr-4 flex-shrink-0 text-slate-400 group-hover:text-amber-400 transition-colors duration-300";
-  switch (icon) {
-    case 'drive':
-      return <DriveIcon className={iconClasses} />;
-    case 'docs':
-      return <DocsIcon className={iconClasses} />;
-    case 'slack':
-      return <SlackIcon className={iconClasses} />;
-    case 'design':
-      return <DesignIcon className={iconClasses} />;
-    case 'policy':
-      return <PolicyIcon className={iconClasses} />;
-    case 'calendar':
-      return <CalendarIcon className={iconClasses} />;
-    case 'training':
-      return <TrainingIcon className={iconClasses} />;
-    case 'fmcsa':
-      return <FmcsaIcon className={iconClasses} />;
-    case 'usmobile':
-      return <UsmobileIcon className={iconClasses} />;
-    default:
-      return null;
-  }
-};
 
 const MainContent: React.FC<MainContentProps> = ({ resources, isLoading }) => {
   const hasResults = resources.some(category => category.links.length > 0);
@@ -111,52 +76,20 @@ const MainContent: React.FC<MainContentProps> = ({ resources, isLoading }) => {
           </p>
         </div>
 
-        {/* Quick Links Section */}
+        {/* Data Orrery Section */}
         <div className="mt-14 w-full max-w-5xl mx-auto">
           <h2 className="font-brand text-3xl font-bold text-amber-500 mb-8 text-center tracking-wider">
-            Quick Links
+            Data Orrery
           </h2>
           {isLoading ? (
             <div className="flex justify-center items-center py-12">
               <SpinnerIcon className="h-12 w-12 text-amber-500" />
             </div>
           ) : hasResults ? (
-            <div className="space-y-12">
-              {resources.map((categoryItem) => (
-                categoryItem.links.length > 0 && (
-                  <div key={categoryItem.category}>
-                    <h3 className="font-brand text-xl font-semibold text-amber-500 mb-4 border-b border-slate-700 pb-2 text-left tracking-wider">
-                      {categoryItem.category}
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {categoryItem.links.map((link) => (
-                        <a
-                          key={link.name}
-                          href={link.url}
-                          onClick={(e) => handleLinkClick(e, link.url)}
-                          className="group block p-6 bg-slate-800/60 backdrop-blur-sm border border-slate-700 rounded-xl shadow-md transform transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-xl hover:border-amber-400 text-left"
-                          aria-label={`Access ${link.name}`}
-                          title={link.description}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center flex-1 min-w-0">
-                              <ResourceIcon icon={link.icon} />
-                              <span className="font-semibold text-gray-200 group-hover:text-amber-500 transition-colors truncate">{link.name}</span>
-                            </div>
-                            <ExternalLinkIcon
-                              className="h-5 w-5 text-gray-400 group-hover:text-amber-500 transition-colors flex-shrink-0 ml-2"
-                             />
-                          </div>
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                )
-              ))}
-            </div>
+            <DataOrrery resources={resources} handleLinkClick={handleLinkClick} />
           ) : (
             <div className="text-center py-12">
-              <p className="text-lg text-gray-400">No resources found. Try a different search term.</p>
+              <p className="text-lg text-gray-400">No resources found orbiting the data hub.</p>
             </div>
           )}
         </div>
