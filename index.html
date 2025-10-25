@@ -44,45 +44,17 @@
         -webkit-tap-highlight-color: transparent; /* Remove tap highlight on iOS */
       }
       
-      @keyframes rotate {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-      }
-      @keyframes counter-rotate {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(-360deg); }
-      }
-      @keyframes pulse {
-        0%, 100% {
-          transform: translate(-50%, -50%) scale(1);
-          box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4);
-        }
-        50% {
-          transform: translate(-50%, -50%) scale(1.08);
-          box-shadow: 0 0 12px 6px rgba(251, 191, 36, 0);
-        }
-      }
       .orrery-container {
-        min-height: 850px;
+        aspect-ratio: 16 / 9;
+        max-height: 80vh;
+        min-height: 500px;
+        width: 100%;
+        cursor: grab;
       }
-      @media (max-width: 800px) {
-        .orrery-container {
-            transform: scale(0.8);
-            min-height: 680px;
-        }
+      .orrery-container:active {
+        cursor: grabbing;
       }
-      @media (max-width: 640px) {
-          .orrery-container {
-              transform: scale(0.6);
-              min-height: 540px;
-          }
-      }
-      @media (max-width: 480px) {
-          .orrery-container {
-              transform: scale(0.45);
-              min-height: 420px;
-          }
-      }
+
     </style>
 <script type="importmap">
 {
@@ -90,7 +62,10 @@
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "@google/genai": "https://esm.run/@google/genai"
+    "@google/genai": "https://esm.run/@google/genai",
+    "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/",
+    "three/": "https://aistudiocdn.com/three@^0.180.0/"
   }
 }
 </script>
