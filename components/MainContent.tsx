@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ExternalLinkIcon } from './icons/ExternalLinkIcon';
 import { WarningIcon } from './icons/WarningIcon';
 import { ResourceCategory } from '../data/resources';
 import { SpinnerIcon } from './icons/SpinnerIcon';
-import ConfirmationDialog from './ConfirmationDialog';
 import DataOrrery from './DataOrrery';
+import GenerativeTools from './GenerativeTools';
 
 // IMPORTANT: Replace this with the actual URL of your company's Google Site.
 const GOOGLE_SITE_URL = 'https://sites.google.com/peaceoutpost.icu/fedcorp/base-camp';
@@ -12,32 +12,11 @@ const GOOGLE_SITE_URL = 'https://sites.google.com/peaceoutpost.icu/fedcorp/base-
 interface MainContentProps {
   resources: ResourceCategory[];
   isLoading: boolean;
+  handleLinkClick: (event: React.MouseEvent<HTMLElement>, url: string) => void;
 }
 
-const MainContent: React.FC<MainContentProps> = ({ resources, isLoading }) => {
+const MainContent: React.FC<MainContentProps> = ({ resources, isLoading, handleLinkClick }) => {
   const hasResults = resources.some(category => category.links.length > 0);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [targetUrl, setTargetUrl] = useState<string | null>(null);
-
-  const handleLinkClick = (event: React.MouseEvent<HTMLAnchorElement>, url: string) => {
-    event.preventDefault();
-    setTargetUrl(url);
-    setIsDialogOpen(true);
-  };
-
-  const handleConfirmNavigation = () => {
-    if (targetUrl) {
-      window.open(targetUrl, '_blank', 'noopener,noreferrer');
-    }
-    setIsDialogOpen(false);
-    setTargetUrl(null);
-  };
-
-  const handleCloseDialog = () => {
-    setIsDialogOpen(false);
-    setTargetUrl(null);
-  };
-
 
   return (
     <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center pt-8 pb-16 max-w-screen-xl">
@@ -54,7 +33,9 @@ const MainContent: React.FC<MainContentProps> = ({ resources, isLoading }) => {
           </div>
         </div>
       </div>
-      <div className="text-center w-full">
+
+      {/* Central Hub Section */}
+      <section id="hub" className="text-center w-full">
         <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg p-8 sm:p-10 max-w-3xl mx-auto transition-shadow duration-300 ease-in-out">
           <h1 className="font-brand text-3xl sm:text-4xl font-extrabold text-gray-100 tracking-tight mb-4">
             WELCOME TO THE CENTRAL HUB
@@ -75,9 +56,11 @@ const MainContent: React.FC<MainContentProps> = ({ resources, isLoading }) => {
             You will be redirected to our secure Google Site.
           </p>
         </div>
+      </section>
 
-        {/* Data Orrery Section */}
-        <div className="mt-14 w-full max-w-5xl mx-auto">
+      {/* Data Orrery Section */}
+      <section id="data-orrery" className="w-full max-w-5xl mx-auto">
+        <div className="mt-14">
           <h2 className="font-brand text-3xl font-bold text-amber-500 mb-8 text-center tracking-wider">
             Data Orrery
           </h2>
@@ -93,13 +76,17 @@ const MainContent: React.FC<MainContentProps> = ({ resources, isLoading }) => {
             </div>
           )}
         </div>
-      </div>
-      <ConfirmationDialog
-        isOpen={isDialogOpen}
-        onClose={handleCloseDialog}
-        onConfirm={handleConfirmNavigation}
-        url={targetUrl}
-      />
+      </section>
+
+      {/* Generative Tools Section */}
+      <section id="generative-tools" className="w-full max-w-5xl mx-auto">
+          <div className="mt-14">
+              <h2 className="font-brand text-3xl font-bold text-amber-500 mb-8 text-center tracking-wider">
+                  Generative AI Tools
+              </h2>
+              <GenerativeTools />
+          </div>
+      </section>
     </main>
   );
 };

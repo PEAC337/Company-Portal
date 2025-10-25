@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { RESOURCE_CATEGORIES, ResourceCategory } from '../data/resources';
 
 import { DriveIcon } from './icons/DriveIcon';
@@ -11,6 +11,8 @@ import { TrainingIcon } from './icons/TrainingIcon';
 import { FmcsaIcon } from './icons/FmcsaIcon';
 import { UsmobileIcon } from './icons/UsmobileIcon';
 import { ExternalLinkIcon } from './icons/ExternalLinkIcon';
+import { PauseIcon } from './icons/PauseIcon';
+import { PlayIcon } from './icons/PlayIcon';
 
 // This component renders an appropriate icon for a given resource link.
 const ResourceIcon: React.FC<{ icon?: string }> = ({ icon }) => {
@@ -46,13 +48,16 @@ interface DataOrreryProps {
 }
 
 const ORBIT_CONFIG: { radius: number; category: string; duration: string }[] = [
-  { radius: 140, category: 'Documents', duration: '80s' },
-  { radius: 240, category: 'Information', duration: '130s' },
-  { radius: 340, category: 'Tools', duration: '200s' },
+  { radius: 120, category: 'Core Infrastructure', duration: '70s' },
+  { radius: 180, category: 'Collaboration & Comms', duration: '100s' },
+  { radius: 240, category: 'Development & Design', duration: '140s' },
+  { radius: 300, category: 'Operations & Compliance', duration: '190s' },
+  { radius: 360, category: 'Accounts & Services', duration: '250s' },
 ];
 
 
 const DataOrrery: React.FC<DataOrreryProps> = ({ resources, handleLinkClick }) => {
+  const [isAnimationPaused, setIsAnimationPaused] = useState(false);
   const visibleLinkUrls = new Set(resources.flatMap(c => c.links.map(l => l.url)));
 
   const allLinks = RESOURCE_CATEGORIES.flatMap(category => 
@@ -67,6 +72,16 @@ const DataOrrery: React.FC<DataOrreryProps> = ({ resources, handleLinkClick }) =
         <h3 className="font-brand text-xl text-slate-300 mt-2 tracking-wider">DATA HUB</h3>
       </div>
       
+      {/* Animation Control Button */}
+      <button
+        onClick={() => setIsAnimationPaused(!isAnimationPaused)}
+        className="absolute z-20 top-0 right-0 p-2 text-slate-400 hover:text-white bg-slate-800/50 backdrop-blur-sm rounded-full focus:outline-none focus:ring-2 focus:ring-amber-500"
+        aria-label={isAnimationPaused ? 'Play animation' : 'Pause animation'}
+        title={isAnimationPaused ? 'Play animation' : 'Pause animation'}
+      >
+        {isAnimationPaused ? <PlayIcon className="h-6 w-6" /> : <PauseIcon className="h-6 w-6" />}
+      </button>
+
       {/* Orbits Visuals */}
       {ORBIT_CONFIG.map(orbit => (
         <div
@@ -93,9 +108,11 @@ const DataOrrery: React.FC<DataOrreryProps> = ({ resources, handleLinkClick }) =
         
         const animationStyle = {
             animation: `rotate ${orbitConfig.duration} linear infinite`,
+            animationPlayState: isAnimationPaused ? 'paused' : ('running' as const),
         };
         const counterAnimationStyle = {
             animation: `counter-rotate ${orbitConfig.duration} linear infinite`,
+            animationPlayState: isAnimationPaused ? 'paused' : ('running' as const),
         }
 
         return (
@@ -111,9 +128,15 @@ const DataOrrery: React.FC<DataOrreryProps> = ({ resources, handleLinkClick }) =
                 href={link.url}
                 onClick={(e) => handleLinkClick(e, link.url)}
                 title={link.description}
-                className={`group absolute transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center w-16 h-16 bg-slate-800/80 backdrop-blur-sm border border-slate-600 rounded-full cursor-pointer hover:border-amber-500 hover:shadow-lg hover:shadow-amber-500/20 transition-all duration-300 ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-50 pointer-events-none'}`}
+                className={`group absolute flex items-center justify-center w-16 h-16 bg-slate-800/80 backdrop-blur-sm border border-slate-600 rounded-full cursor-pointer hover:border-amber-500 hover:shadow-lg hover:shadow-amber-500/20 transition-all duration-300 ${isVisible ? 'opacity-100' : 'opacity-0 scale-50 pointer-events-none'}`}
                 style={{
                   top: `-${orbitConfig.radius}px`,
+                  animationName: 'pulse',
+                  animationDuration: '5s',
+                  animationTimingFunction: 'ease-in-out',
+                  animationIterationCount: 'infinite',
+                  animationDelay: `${Math.random() * 5}s`,
+                  animationPlayState: isAnimationPaused ? 'paused' : 'running',
                 }}
               >
                 <div style={counterAnimationStyle}>
@@ -125,6 +148,7 @@ const DataOrrery: React.FC<DataOrreryProps> = ({ resources, handleLinkClick }) =
                     style={counterAnimationStyle}
                 >
                     <p className="font-bold text-base">{link.name}</p>
+
                     <p className="text-xs text-slate-400 mt-1">{link.description}</p>
                 </div>
               </a>

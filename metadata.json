@@ -1,5 +1,7 @@
 {
   "name": "U.S. Ministry Portal",
   "description": "A dedicated portal providing secure access to the U.S. Ministry's internal Google Site and resources.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "geolocation"
+  ]
 }

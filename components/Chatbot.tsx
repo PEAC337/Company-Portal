@@ -10,12 +10,18 @@ interface Message {
   sources?: { uri: string; title: string }[];
 }
 
+interface Location {
+    latitude: number;
+    longitude: number;
+}
+
 const Chatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [location, setLocation] = useState<Location | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -35,11 +41,27 @@ const Chatbot: React.FC = () => {
       setMessages([
           { role: 'model', text: 'Hello! How can I assist you today? I can access up-to-date information to answer your questions.' }
       ]);
+      
+      // Request user's location
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+        },
+        (error) => {
+          console.warn(`Geolocation error: ${error.message}`);
+          // You could add a message to the user here if needed
+        }
+      );
+
     } else {
         setMessages([]);
         setUserInput('');
         setIsLoading(false);
         setError(null);
+        setLocation(null);
     }
   }, [isOpen]);
 
@@ -56,11 +78,19 @@ const Chatbot: React.FC = () => {
 
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: trimmedInput,
         config: {
-          tools: [{ googleSearch: {} }],
+          tools: [{ googleSearch: {} }, { googleMaps: {} }],
+          ...(location && {
+            toolConfig: {
+              retrievalConfig: {
+                latLng: location,
+              },
+            },
+          }),
         },
       });
       
@@ -70,6 +100,8 @@ const Chatbot: React.FC = () => {
         for (const chunk of groundingChunks) {
           if (chunk.web) {
             sources.push({ uri: chunk.web.uri, title: chunk.web.title });
+          } else if (chunk.maps) {
+            sources.push({ uri: chunk.maps.uri, title: chunk.maps.title });
           }
         }
       }

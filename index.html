@@ -23,6 +23,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+      html {
+        scroll-behavior: smooth;
+        /* Header (5rem) + Nav (3.5rem) + 0.5rem buffer */
+        scroll-padding-top: 9rem; 
+      }
       .font-brand {
         font-family: 'Major Mono Display', monospace;
       }
@@ -47,25 +52,35 @@
         from { transform: rotate(0deg); }
         to { transform: rotate(-360deg); }
       }
+      @keyframes pulse {
+        0%, 100% {
+          transform: translate(-50%, -50%) scale(1);
+          box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4);
+        }
+        50% {
+          transform: translate(-50%, -50%) scale(1.08);
+          box-shadow: 0 0 12px 6px rgba(251, 191, 36, 0);
+        }
+      }
       .orrery-container {
-        min-height: 750px;
+        min-height: 850px;
       }
       @media (max-width: 800px) {
         .orrery-container {
             transform: scale(0.8);
-            min-height: 600px;
+            min-height: 680px;
         }
       }
       @media (max-width: 640px) {
           .orrery-container {
               transform: scale(0.6);
-              min-height: 480px;
+              min-height: 540px;
           }
       }
       @media (max-width: 480px) {
           .orrery-container {
               transform: scale(0.45);
-              min-height: 380px;
+              min-height: 420px;
           }
       }
     </style>

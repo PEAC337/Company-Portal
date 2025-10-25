@@ -1,14 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
+import Navigation from './components/Navigation';
 import MainContent from './components/MainContent';
 import Footer from './components/Footer';
 import Chatbot from './components/Chatbot';
+import ConfirmationDialog from './components/ConfirmationDialog';
 import { RESOURCE_CATEGORIES, ResourceCategory } from './data/resources';
 
 const App: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredResources, setFilteredResources] = useState<ResourceCategory[]>(RESOURCE_CATEGORIES);
   const [isLoading, setIsLoading] = useState(false);
+
+  // State lifted from MainContent to be shared with Navigation
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [targetUrl, setTargetUrl] = useState<string | null>(null);
+
+  const handleLinkClick = (event: React.MouseEvent<HTMLElement>, url: string) => {
+    event.preventDefault();
+    setTargetUrl(url);
+    setIsDialogOpen(true);
+  };
+
+  const handleConfirmNavigation = () => {
+    if (targetUrl) {
+      window.open(targetUrl, '_blank', 'noopener,noreferrer');
+    }
+    setIsDialogOpen(false);
+    setTargetUrl(null);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setTargetUrl(null);
+  };
+
 
   useEffect(() => {
     setIsLoading(true);
@@ -55,9 +81,20 @@ const App: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <Header searchTerm={searchTerm} onSearchChange={setSearchTerm} />
-      <MainContent resources={filteredResources} isLoading={isLoading} />
+      <Navigation handleLinkClick={handleLinkClick} />
+      <MainContent 
+        resources={filteredResources} 
+        isLoading={isLoading} 
+        handleLinkClick={handleLinkClick}
+      />
       <Footer />
       <Chatbot />
+      <ConfirmationDialog
+        isOpen={isDialogOpen}
+        onClose={handleCloseDialog}
+        onConfirm={handleConfirmNavigation}
+        url={targetUrl}
+      />
     </div>
   );
 };
