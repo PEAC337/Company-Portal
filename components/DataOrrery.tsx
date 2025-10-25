@@ -78,8 +78,12 @@ const DataOrrery: React.FC<DataOrreryProps> = ({ resources, handleLinkClick }) =
   const [isAnimationPaused, setIsAnimationPaused] = useState(false);
   const [hoveredObject, setHoveredObject] = useState<HoveredObject | null>(null);
   
-  const hoveredInstanceRef = useRef<{ id: number | null, data: PlanetData | null }>({ id: null, data: null });
   const resourcesMapRef = useRef<Map<string, { status: ResourceLink['status']; isVisible: boolean }>>(new Map());
+  const isPausedRef = useRef(isAnimationPaused);
+
+  useEffect(() => {
+    isPausedRef.current = isAnimationPaused;
+  }, [isAnimationPaused]);
 
   useEffect(() => {
     const newMap = new Map();
@@ -139,8 +143,7 @@ const DataOrrery: React.FC<DataOrreryProps> = ({ resources, handleLinkClick }) =
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.enablePan = false;
-    controls.minDistance = 10;
-    controls.maxDistance = 50;
+    controls.enableZoom = false;
     controls.maxPolarAngle = Math.PI / 2 - 0.1;
 
     // --- Post-processing (Bloom) ---
@@ -151,10 +154,12 @@ const DataOrrery: React.FC<DataOrreryProps> = ({ resources, handleLinkClick }) =
     composer.addPass(bloomPass);
 
     // --- Lighting ---
-    scene.add(new THREE.AmbientLight(0xffffff, 0.2));
-    const pointLight = new THREE.PointLight(0xffffff, 0.8, 100);
-    pointLight.position.set(0, 5, 0);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const pointLight = new THREE.PointLight(0xffffff, 1.0, 100);
+    pointLight.position.set(0, 10, 0);
     scene.add(pointLight);
+    const hemisphereLight = new THREE.HemisphereLight(0x6080ff, 0x303050, 1.2);
+    scene.add(hemisphereLight);
 
     // --- Central Hub ---
     const hub = new THREE.Mesh(
@@ -169,23 +174,36 @@ const DataOrrery: React.FC<DataOrreryProps> = ({ resources, handleLinkClick }) =
     ORBIT_CONFIG.forEach(orbitConf => {
       const orbit = new THREE.Mesh(
         new THREE.TorusGeometry(orbitConf.radius, 0.03, 16, 100),
-        new THREE.MeshBasicMaterial({ color: 0x334155 })
+        new THREE.MeshBasicMaterial({ color: 0x475569 })
       );
       orbit.rotation.x = Math.PI / 2;
       scene.add(orbit);
     });
+
+    const highlightGeometry = new THREE.TorusGeometry(1, 0.08, 16, 100);
+    const highlightMaterial = new THREE.MeshBasicMaterial({ color: 0xfde047 });
+    const highlightOrbit = new THREE.Mesh(highlightGeometry, highlightMaterial);
+    highlightOrbit.rotation.x = Math.PI / 2;
+    highlightOrbit.visible = false;
+    scene.add(highlightOrbit);
     
     const planetGeometry = new THREE.SphereGeometry(0.5, 32, 32);
-    const planetMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true });
+    const planetMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      vertexColors: true,
+      emissive: 0xaaaaaa,
+      emissiveIntensity: 0.2
+    });
     const planets = new THREE.InstancedMesh(planetGeometry, planetMaterial, planetInstanceData.length);
     planets.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     if (planets.instanceColor) planets.instanceColor.setUsage(THREE.DynamicDrawUsage);
     scene.add(planets);
 
     const matrix = new THREE.Matrix4();
-    const hoverColor = new THREE.Color(0x34d399); // A bright green for hover
+    const hoverColor = new THREE.Color(0x67e8f9); // A bright cyan for hover
 
     // --- Interaction ---
+    const hoveredInstanceRef = { id: null as number | null, data: null as PlanetData | null };
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
@@ -196,8 +214,8 @@ const DataOrrery: React.FC<DataOrreryProps> = ({ resources, handleLinkClick }) =
     };
     
     const onClick = (event: MouseEvent) => {
-      if (hoveredInstanceRef.current.data) {
-        handleLinkClick(event as any, hoveredInstanceRef.current.data.url);
+      if (hoveredInstanceRef.data) {
+        handleLinkClick(event as any, hoveredInstanceRef.data.url);
       }
     };
 
@@ -210,46 +228,50 @@ const DataOrrery: React.FC<DataOrreryProps> = ({ resources, handleLinkClick }) =
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
-
-      if (isAnimationPaused) {
+      
+      if (isPausedRef.current) {
         if (clock.running) clock.stop();
       } else {
         if (!clock.running) clock.start();
       }
-
+      
       const delta = clock.getDelta();
       const elapsedTime = clock.getElapsedTime();
-      hub.rotation.y += delta * 0.1;
 
-      // Update Instances
-      planetInstanceData.forEach((data, i) => {
-        const resourceInfo = resourcesMapRef.current.get(data.url);
-        
-        if (!resourceInfo || !resourceInfo.isVisible) {
-          matrix.makeScale(0, 0, 0);
-        } else {
-          const statusConfig = STATUS_CONFIG[resourceInfo.status];
-          const angularSpeed = (0.5 / Math.sqrt(data.radius)) * statusConfig.speedMultiplier;
-          const newAngle = data.initialAngle + angularSpeed * elapsedTime;
+      // Only update scene if not paused
+      if (!isPausedRef.current) {
+        hub.rotation.y += delta * 0.1;
 
-          const position = new THREE.Vector3(data.radius * Math.cos(newAngle), 0, data.radius * Math.sin(newAngle));
-          const quaternion = new THREE.Quaternion();
+        // Update Instances
+        planetInstanceData.forEach((data, i) => {
+          const resourceInfo = resourcesMapRef.current.get(data.url);
+          
+          if (!resourceInfo || !resourceInfo.isVisible) {
+            matrix.makeScale(0, 0, 0);
+          } else {
+            const statusConfig = STATUS_CONFIG[resourceInfo.status];
+            const angularSpeed = (0.5 / Math.sqrt(data.radius)) * statusConfig.speedMultiplier;
+            const newAngle = data.initialAngle + angularSpeed * elapsedTime;
 
-          let scale = 1.0;
-          if (statusConfig.pulse) scale = 1.0 + Math.sin(elapsedTime * 5) * 0.15;
-          if (statusConfig.flicker && Math.random() > 0.8) scale *= 0.5;
-          const scaleVec = new THREE.Vector3(scale, scale, scale);
+            const position = new THREE.Vector3(data.radius * Math.cos(newAngle), 0, data.radius * Math.sin(newAngle));
+            const quaternion = new THREE.Quaternion();
 
-          matrix.compose(position, quaternion, scaleVec);
-        }
-        planets.setMatrixAt(i, matrix);
-        
-        if (resourceInfo) {
-          planets.setColorAt(i, STATUS_CONFIG[resourceInfo.status].color);
-        }
-      });
+            let scale = 1.0;
+            if (statusConfig.pulse) scale = 1.0 + Math.sin(elapsedTime * 5) * 0.15;
+            if (statusConfig.flicker && Math.random() > 0.8) scale *= 0.5;
+            const scaleVec = new THREE.Vector3(scale, scale, scale);
+
+            matrix.compose(position, quaternion, scaleVec);
+          }
+          planets.setMatrixAt(i, matrix);
+          
+          if (resourceInfo) {
+            planets.setColorAt(i, STATUS_CONFIG[resourceInfo.status].color);
+          }
+        });
+      }
       
-      // Raycasting for Hover
+      // Raycasting for Hover (runs even when paused)
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObject(planets);
 
@@ -262,8 +284,9 @@ const DataOrrery: React.FC<DataOrreryProps> = ({ resources, handleLinkClick }) =
         }
       }
 
-      if (hoveredInstanceRef.current.id !== currentHoverId) {
-          hoveredInstanceRef.current = { id: currentHoverId, data: currentHoverId !== null ? planetInstanceData[currentHoverId] : null };
+      if (hoveredInstanceRef.id !== currentHoverId) {
+          hoveredInstanceRef.id = currentHoverId;
+          hoveredInstanceRef.data = currentHoverId !== null ? planetInstanceData[currentHoverId] : null;
 
           if (currentHoverId !== null) {
               const instanceData = planetInstanceData[currentHoverId];
@@ -276,13 +299,16 @@ const DataOrrery: React.FC<DataOrreryProps> = ({ resources, handleLinkClick }) =
                       y: (-screenPosition.y + 1) / 2 * currentMount.clientHeight,
                   }
               });
+              highlightOrbit.scale.set(instanceData.radius, instanceData.radius, 1);
+              highlightOrbit.visible = true;
           } else {
               setHoveredObject(null);
+              highlightOrbit.visible = false;
           }
       }
 
-      if (hoveredInstanceRef.current.id !== null) {
-        planets.setColorAt(hoveredInstanceRef.current.id, hoverColor);
+      if (hoveredInstanceRef.id !== null) {
+        planets.setColorAt(hoveredInstanceRef.id, hoverColor);
       }
       
       planets.instanceMatrix.needsUpdate = true;
@@ -322,7 +348,7 @@ const DataOrrery: React.FC<DataOrreryProps> = ({ resources, handleLinkClick }) =
         }
       });
     };
-  }, [isAnimationPaused, handleLinkClick]);
+  }, [handleLinkClick]);
 
   const IconComponent = hoveredObject ? iconMap[hoveredObject.data.icon || 'default'] : null;
 
