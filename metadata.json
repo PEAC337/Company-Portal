@@ -1,5 +1,7 @@
 {
   "name": "Arcane Orrery of Data",
   "description": "A dynamic visualization of service statuses, represented as an 'Arcane Orrery' where elemental forms orbit a central core, changing their behavior based on health.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "camera"
+  ]
 }

@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, Modality } from '@google/genai';
 import { SpinnerIcon } from './icons/SpinnerIcon';
 import { PhotoIcon } from './icons/PhotoIcon';
-import { WandIcon } from './icons/WandIcon';
 import { WarningIcon } from './icons/WarningIcon';
 import { KeyIcon } from './icons/KeyIcon';
-import { BrainIcon } from './icons/BrainIcon';
+import { AnalyzeIcon } from './icons/AnalyzeIcon';
+import { VideoIcon } from './icons/VideoIcon';
+
 
 const blobToBase64 = (blob: Blob): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -28,15 +29,33 @@ const handleApiError = (err: any, onKeyInvalid: () => void) => {
     return 'An unexpected error occurred. Please try again.';
 }
 
-const ThinkingModeQuery: React.FC<{ onKeyInvalid: () => void }> = ({ onKeyInvalid }) => {
+const ImageAnalyzer: React.FC<{ onKeyInvalid: () => void }> = ({ onKeyInvalid }) => {
+    const [image, setImage] = useState<{ file: File, dataUrl: string } | null>(null);
     const [prompt, setPrompt] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [response, setResponse] = useState<string | null>(null);
 
-    const handleGenerate = async () => {
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImage({ file, dataUrl: reader.result as string });
+            };
+            reader.readAsDataURL(file);
+            setResponse(null);
+            setError(null);
+        }
+    };
+
+    const handleAnalyze = async () => {
+        if (!image) {
+            setError('Please upload an image first.');
+            return;
+        }
         if (!prompt.trim()) {
-            setError('Please enter a prompt.');
+            setError('Please enter a prompt to ask about the image.');
             return;
         }
         setIsLoading(true);
@@ -45,14 +64,22 @@ const ThinkingModeQuery: React.FC<{ onKeyInvalid: () => void }> = ({ onKeyInvali
 
         try {
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
-            const result = await ai.models.generateContent({
-                model: 'gemini-2.5-pro',
-                contents: prompt,
-                config: {
-                    thinkingConfig: { thinkingBudget: 32768 },
+            const base64Data = await blobToBase64(image.file);
+
+            const imagePart = {
+                inlineData: {
+                    mimeType: image.file.type,
+                    data: base64Data,
                 },
+            };
+            const textPart = { text: prompt };
+
+            const result = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: { parts: [imagePart, textPart] },
             });
             setResponse(result.text);
+
         } catch (err) {
             setError(handleApiError(err, onKeyInvalid));
         } finally {
@@ -63,34 +90,208 @@ const ThinkingModeQuery: React.FC<{ onKeyInvalid: () => void }> = ({ onKeyInvali
     return (
         <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg p-6 sm:p-8">
             <div className="flex items-center mb-4">
-                <BrainIcon className="h-8 w-8 text-amber-500 mr-3" />
-                <h3 className="font-brand text-2xl font-bold text-slate-100 tracking-wider">Thinking Mode</h3>
+                <AnalyzeIcon className="h-8 w-8 text-amber-500 mr-3" />
+                <h3 className="font-brand text-2xl font-bold text-slate-100 tracking-wider">Image Analyzer</h3>
             </div>
-            <p className="text-slate-400 mb-4">Tackle complex problems with Gemini 2.5 Pro, configured with the maximum thinking budget for deep reasoning and analysis.</p>
+            <p className="text-slate-400 mb-4">Upload an image and ask Gemini a question about it.</p>
             <div className="space-y-4">
+                <div>
+                    <label htmlFor="analyzer-file-upload" className="block text-sm font-medium text-slate-300 mb-1">1. Upload Image</label>
+                    <input
+                        id="analyzer-file-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        disabled={isLoading}
+                        className="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-slate-700 file:text-slate-200 hover:file:bg-slate-600"
+                    />
+                </div>
+                {image && (
+                    <div>
+                        <img src={image.dataUrl} alt="Upload preview" className="rounded-lg shadow-md max-h-64 mx-auto" />
+                    </div>
+                )}
                 <textarea
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
-                    placeholder="Enter a complex query or problem..."
+                    placeholder="2. Ask a question about the image..."
                     className="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    rows={4}
-                    disabled={isLoading}
+                    rows={2}
+                    disabled={isLoading || !image}
                 />
-                <div className="flex justify-end">
-                    <button
-                        onClick={handleGenerate}
-                        disabled={isLoading}
-                        className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-2 bg-amber-600 text-white font-semibold rounded-lg shadow-md hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-amber-500 transition-colors disabled:bg-slate-600 disabled:cursor-not-allowed"
-                    >
-                        {isLoading && <SpinnerIcon className="h-5 w-5 mr-2" />}
-                        {isLoading ? 'Thinking...' : 'Submit'}
-                    </button>
-                </div>
+                 <button
+                    onClick={handleAnalyze}
+                    disabled={isLoading || !image || !prompt.trim()}
+                    className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-2 bg-amber-600 text-white font-semibold rounded-lg shadow-md hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-amber-500 transition-colors disabled:bg-slate-600 disabled:cursor-not-allowed"
+                >
+                    {isLoading && <SpinnerIcon className="h-5 w-5 mr-2" />}
+                    {isLoading ? 'Analyzing...' : 'Analyze Image'}
+                </button>
                 {error && <p className="text-red-400 text-sm flex items-center"><WarningIcon className="h-4 w-4 mr-2" />{error}</p>}
                 {response && (
                     <div className="mt-4 border-t border-slate-700 pt-4">
-                        <h4 className="font-brand text-lg text-amber-400 mb-2 tracking-wider">Response</h4>
+                        <h4 className="font-brand text-lg text-amber-400 mb-2 tracking-wider">Analysis Result</h4>
                         <div className="prose prose-sm prose-invert max-w-none text-slate-300 whitespace-pre-wrap">{response}</div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+
+const VideoGeneratorFromImage: React.FC<{ onKeyInvalid: () => void }> = ({ onKeyInvalid }) => {
+    const [image, setImage] = useState<{ file: File, dataUrl: string } | null>(null);
+    const [prompt, setPrompt] = useState('');
+    const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16'>('16:9');
+    const [isLoading, setIsLoading] = useState(false);
+    const [loadingMessage, setLoadingMessage] = useState('');
+    const [error, setError] = useState<string | null>(null);
+    const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
+
+    // Clean up object URL when component unmounts or video changes
+    useEffect(() => {
+        return () => {
+            if (generatedVideoUrl) {
+                URL.revokeObjectURL(generatedVideoUrl);
+            }
+        };
+    }, [generatedVideoUrl]);
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImage({ file, dataUrl: reader.result as string });
+            };
+            reader.readAsDataURL(file);
+            setGeneratedVideoUrl(null);
+            setError(null);
+        }
+    };
+
+    const handleGenerate = async () => {
+        if (!image) {
+            setError('Please upload an image first.');
+            return;
+        }
+        if (!prompt.trim()) {
+            setError('Please enter a prompt to describe the video.');
+            return;
+        }
+        setIsLoading(true);
+        setError(null);
+        setGeneratedVideoUrl(null);
+        setLoadingMessage('Initializing video generation...');
+
+        try {
+            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+            const base64Data = await blobToBase64(image.file);
+            
+            let operation = await ai.models.generateVideos({
+                model: 'veo-3.1-fast-generate-preview',
+                prompt: prompt,
+                image: {
+                    imageBytes: base64Data,
+                    mimeType: image.file.type,
+                },
+                config: {
+                    numberOfVideos: 1,
+                    resolution: '720p',
+                    aspectRatio: aspectRatio,
+                }
+            });
+
+            setLoadingMessage('Generating video... This may take a few minutes. Please wait.');
+            while (!operation.done) {
+                await new Promise(resolve => setTimeout(resolve, 10000));
+                operation = await ai.operations.getVideosOperation({ operation: operation });
+            }
+            
+            setLoadingMessage('Finalizing video...');
+            const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
+            if (!downloadLink) {
+                throw new Error("Video generation succeeded, but no download link was found.");
+            }
+            
+            const response = await fetch(`${downloadLink}&key=${process.env.API_KEY!}`);
+            if (!response.ok) {
+                throw new Error(`Failed to download video: ${response.statusText}`);
+            }
+
+            const videoBlob = await response.blob();
+            const videoUrl = URL.createObjectURL(videoBlob);
+            setGeneratedVideoUrl(videoUrl);
+
+        } catch (err) {
+            setError(handleApiError(err, onKeyInvalid));
+        } finally {
+            setIsLoading(false);
+            setLoadingMessage('');
+        }
+    };
+
+    return (
+        <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg p-6 sm:p-8">
+            <div className="flex items-center mb-4">
+                <VideoIcon className="h-8 w-8 text-amber-500 mr-3" />
+                <h3 className="font-brand text-2xl font-bold text-slate-100 tracking-wider">Video Generation</h3>
+            </div>
+            <p className="text-slate-400 mb-4">Upload a starting image and generate a short video with Veo.</p>
+            <div className="space-y-4">
+                <div>
+                    <label htmlFor="video-file-upload" className="block text-sm font-medium text-slate-300 mb-1">1. Upload Starting Image</label>
+                    <input
+                        id="video-file-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        disabled={isLoading}
+                        className="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-slate-700 file:text-slate-200 hover:file:bg-slate-600"
+                    />
+                </div>
+                {image && (
+                    <div>
+                        <img src={image.dataUrl} alt="Upload preview" className="rounded-lg shadow-md max-h-64 mx-auto" />
+                    </div>
+                )}
+                <textarea
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    placeholder="2. Describe the video scene..."
+                    className="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    rows={2}
+                    disabled={isLoading || !image}
+                />
+                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-4 sm:space-y-0">
+                    <div className="flex-1">
+                        <label htmlFor="video-aspect-ratio" className="block text-sm font-medium text-slate-300 mb-1">3. Aspect Ratio</label>
+                        <select
+                            id="video-aspect-ratio"
+                            value={aspectRatio}
+                            onChange={(e) => setAspectRatio(e.target.value as '16:9' | '9:16')}
+                            className="w-full bg-slate-800 border border-slate-600 rounded-lg py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                            disabled={isLoading}
+                        >
+                            <option value="16:9">Landscape (16:9)</option>
+                            <option value="9:16">Portrait (9:16)</option>
+                        </select>
+                    </div>
+                     <button
+                        onClick={handleGenerate}
+                        disabled={isLoading || !image || !prompt.trim()}
+                        className="w-full sm:w-auto self-end inline-flex items-center justify-center px-6 py-2 bg-amber-600 text-white font-semibold rounded-lg shadow-md hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-amber-500 transition-colors disabled:bg-slate-600 disabled:cursor-not-allowed"
+                    >
+                        {isLoading && <SpinnerIcon className="h-5 w-5 mr-2" />}
+                        Generate Video
+                    </button>
+                </div>
+                 {isLoading && <p className="text-amber-300 text-sm flex items-center"><SpinnerIcon className="h-4 w-4 mr-2" />{loadingMessage}</p>}
+                {error && <p className="text-red-400 text-sm flex items-center"><WarningIcon className="h-4 w-4 mr-2" />{error}</p>}
+                {generatedVideoUrl && (
+                    <div className="mt-4 border-t border-slate-700 pt-4">
+                        <video src={generatedVideoUrl} controls autoPlay loop className="rounded-lg shadow-lg mx-auto max-h-96" />
                     </div>
                 )}
             </div>
@@ -181,137 +382,13 @@ const ImageGenerator: React.FC<{ onKeyInvalid: () => void }> = ({ onKeyInvalid }
                 {error && <p className="text-red-400 text-sm flex items-center"><WarningIcon className="h-4 w-4 mr-2" />{error}</p>}
                 {generatedImage && (
                     <div className="mt-4 border-t border-slate-700 pt-4">
-                        <img src={generatedImage} alt="Generated image" className="rounded-lg shadow-lg mx-auto max-h-96" />
+                        <img src={generatedImage} alt="Generated" className="rounded-lg shadow-lg mx-auto max-h-96" />
                     </div>
                 )}
             </div>
         </div>
     );
 };
-
-const ImageEditor: React.FC<{ onKeyInvalid: () => void }> = ({ onKeyInvalid }) => {
-    const [originalImage, setOriginalImage] = useState<{ file: File, dataUrl: string } | null>(null);
-    const [prompt, setPrompt] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [editedImage, setEditedImage] = useState<string | null>(null);
-
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setOriginalImage({ file, dataUrl: reader.result as string });
-            };
-            reader.readAsDataURL(file);
-            setEditedImage(null);
-        }
-    };
-
-    const handleEdit = async () => {
-        if (!originalImage) {
-            setError('Please upload an image first.');
-            return;
-        }
-        if (!prompt.trim()) {
-            setError('Please enter an editing prompt.');
-            return;
-        }
-        setIsLoading(true);
-        setError(null);
-        setEditedImage(null);
-
-        try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
-            const base64Data = await blobToBase64(originalImage.file);
-
-            const imagePart = {
-                inlineData: {
-                    mimeType: originalImage.file.type,
-                    data: base64Data,
-                },
-            };
-            const textPart = { text: prompt };
-
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash-image',
-                contents: { parts: [imagePart, textPart] },
-                config: {
-                    responseModalities: [Modality.IMAGE],
-                },
-            });
-
-            for (const part of response.candidates[0].content.parts) {
-                if (part.inlineData) {
-                    const base64ImageBytes = part.inlineData.data;
-                    const imageUrl = `data:${part.inlineData.mimeType};base64,${base64ImageBytes}`;
-                    setEditedImage(imageUrl);
-                    return;
-                }
-            }
-            throw new Error("No image data found in response.");
-
-        } catch (err) {
-            setError(handleApiError(err, onKeyInvalid));
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    return (
-        <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg p-6 sm:p-8">
-            <div className="flex items-center mb-4">
-                <WandIcon className="h-8 w-8 text-amber-500 mr-3" />
-                <h3 className="font-brand text-2xl font-bold text-slate-100 tracking-wider">Image Editing</h3>
-            </div>
-            <p className="text-slate-400 mb-4">Upload an image and use a text prompt to modify it with Gemini.</p>
-            <div className="space-y-4">
-                <div>
-                    <label htmlFor="file-upload" className="block text-sm font-medium text-slate-300 mb-1">1. Upload Image</label>
-                    <input
-                        id="file-upload"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        disabled={isLoading}
-                        className="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-slate-700 file:text-slate-200 hover:file:bg-slate-600"
-                    />
-                </div>
-                {originalImage && (
-                    <div className="flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0">
-                        <div className="flex-1">
-                            <p className="text-sm font-medium text-slate-300 mb-2">Original</p>
-                            <img src={originalImage.dataUrl} alt="Original" className="rounded-lg shadow-md max-h-64" />
-                        </div>
-                        {editedImage && (
-                             <div className="flex-1">
-                                <p className="text-sm font-medium text-slate-300 mb-2">Edited</p>
-                                <img src={editedImage} alt="Edited" className="rounded-lg shadow-md max-h-64" />
-                            </div>
-                        )}
-                    </div>
-                )}
-                <textarea
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    placeholder="2. Enter editing instructions... e.g., Add a retro filter"
-                    className="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    rows={2}
-                    disabled={isLoading || !originalImage}
-                />
-                 <button
-                    onClick={handleEdit}
-                    disabled={isLoading || !originalImage || !prompt.trim()}
-                    className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-2 bg-amber-600 text-white font-semibold rounded-lg shadow-md hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-amber-500 transition-colors disabled:bg-slate-600 disabled:cursor-not-allowed"
-                >
-                    {isLoading && <SpinnerIcon className="h-5 w-5 mr-2" />}
-                    {isLoading ? 'Editing...' : 'Edit Image'}
-                </button>
-                {error && <p className="text-red-400 text-sm flex items-center"><WarningIcon className="h-4 w-4 mr-2" />{error}</p>}
-            </div>
-        </div>
-    );
-}
 
 const ApiKeyManager: React.FC<{ children: (onKeyInvalid: () => void) => React.ReactNode }> = ({ children }) => {
     const [hasApiKey, setHasApiKey] = useState(false);
@@ -411,15 +488,14 @@ const ApiKeyManager: React.FC<{ children: (onKeyInvalid: () => void) => React.Re
     return <>{children(onKeyInvalid)}</>;
 };
 
-
 const GenerativeTools: React.FC = () => {
     return (
         <ApiKeyManager>
             {(onKeyInvalid) => (
                 <div className="space-y-12">
-                    <ThinkingModeQuery onKeyInvalid={onKeyInvalid} />
+                    <ImageAnalyzer onKeyInvalid={onKeyInvalid} />
+                    <VideoGeneratorFromImage onKeyInvalid={onKeyInvalid} />
                     <ImageGenerator onKeyInvalid={onKeyInvalid} />
-                    <ImageEditor onKeyInvalid={onKeyInvalid} />
                 </div>
             )}
         </ApiKeyManager>
