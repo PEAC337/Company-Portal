@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GoogleGenAI, Modality } from '@google/genai';
 import { SpinnerIcon } from './icons/SpinnerIcon';
 import { PhotoIcon } from './icons/PhotoIcon';
 import { WandIcon } from './icons/WandIcon';
 import { WarningIcon } from './icons/WarningIcon';
+import { KeyIcon } from './icons/KeyIcon';
 
 const blobToBase64 = (blob: Blob): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -17,7 +18,17 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
     });
 };
 
-const ImageGenerator: React.FC = () => {
+const handleApiError = (err: any, onKeyInvalid: () => void) => {
+    console.error(err);
+    if (err instanceof Error && err.message.includes("Requested entity was not found.")) {
+        onKeyInvalid();
+        return 'Connection failed. Please re-select your API key and try again.';
+    }
+    return 'An unexpected error occurred. Please try again.';
+}
+
+
+const ImageGenerator: React.FC<{ onKeyInvalid: () => void }> = ({ onKeyInvalid }) => {
     const [prompt, setPrompt] = useState('');
     const [aspectRatio, setAspectRatio] = useState('1:1');
     const [isLoading, setIsLoading] = useState(false);
@@ -48,8 +59,7 @@ const ImageGenerator: React.FC = () => {
             const imageUrl = `data:image/jpeg;base64,${base64ImageBytes}`;
             setGeneratedImage(imageUrl);
         } catch (err) {
-            console.error(err);
-            setError('Failed to generate image. Please try again.');
+            setError(handleApiError(err, onKeyInvalid));
         } finally {
             setIsLoading(false);
         }
@@ -108,7 +118,7 @@ const ImageGenerator: React.FC = () => {
     );
 };
 
-const ImageEditor: React.FC = () => {
+const ImageEditor: React.FC<{ onKeyInvalid: () => void }> = ({ onKeyInvalid }) => {
     const [originalImage, setOriginalImage] = useState<{ file: File, dataUrl: string } | null>(null);
     const [prompt, setPrompt] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -171,8 +181,7 @@ const ImageEditor: React.FC = () => {
             throw new Error("No image data found in response.");
 
         } catch (err) {
-            console.error(err);
-            setError('Failed to edit image. Please try again.');
+            setError(handleApiError(err, onKeyInvalid));
         } finally {
             setIsLoading(false);
         }
@@ -233,12 +242,92 @@ const ImageEditor: React.FC = () => {
     );
 }
 
+const ApiKeyManager: React.FC<{ children: (onKeyInvalid: () => void) => React.ReactNode }> = ({ children }) => {
+    const [hasApiKey, setHasApiKey] = useState(false);
+    const [isChecking, setIsChecking] = useState(true);
+
+    const checkApiKey = async () => {
+        setIsChecking(true);
+        try {
+            // @ts-ignore
+            if (window.aistudio && await window.aistudio.hasSelectedApiKey()) {
+                setHasApiKey(true);
+            } else {
+                setHasApiKey(false);
+            }
+        } catch (e) {
+            console.error("Failed to check for API key", e);
+            setHasApiKey(false);
+        } finally {
+            setIsChecking(false);
+        }
+    };
+    
+    useEffect(() => {
+        checkApiKey();
+    }, []);
+
+    const handleConnect = async () => {
+        try {
+            // @ts-ignore
+            await window.aistudio.openSelectKey();
+            // Assume success to handle race condition where hasSelectedApiKey is not immediately true
+            setHasApiKey(true);
+        } catch (e) {
+            console.error("Failed to open API key selection", e);
+        }
+    };
+
+    if (isChecking) {
+        return (
+            <div className="flex justify-center items-center p-8">
+                <SpinnerIcon className="h-8 w-8 text-amber-500" />
+            </div>
+        );
+    }
+
+    if (!hasApiKey) {
+        return (
+            <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg p-6 sm:p-8 text-center">
+                <div className="flex justify-center mb-4">
+                    <div className="w-16 h-16 flex items-center justify-center rounded-full bg-amber-900/50">
+                        <KeyIcon className="h-8 w-8 text-amber-400" />
+                    </div>
+                </div>
+                <h3 className="font-brand text-2xl font-bold text-slate-100 tracking-wider">Connect to AI Services</h3>
+                <p className="text-slate-400 mt-2 mb-6 max-w-md mx-auto">
+                    To use the generative AI tools, please connect your API key. This is required for authentication and billing purposes.
+                </p>
+                <button
+                    onClick={handleConnect}
+                    className="inline-flex items-center justify-center px-6 py-2 bg-amber-600 text-white font-semibold rounded-lg shadow-md hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-amber-500 transition-colors"
+                >
+                    Connect API Key
+                </button>
+                <p className="text-xs text-slate-500 mt-4">
+                    For more information on billing, see the{' '}
+                    <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-400">
+                        Gemini API documentation
+                    </a>.
+                </p>
+            </div>
+        );
+    }
+
+    return <>{children(() => setHasApiKey(false))}</>;
+};
+
+
 const GenerativeTools: React.FC = () => {
     return (
-        <div className="space-y-12">
-            <ImageGenerator />
-            <ImageEditor />
-        </div>
+        <ApiKeyManager>
+            {(onKeyInvalid) => (
+                <div className="space-y-12">
+                    <ImageGenerator onKeyInvalid={onKeyInvalid} />
+                    <ImageEditor onKeyInvalid={onKeyInvalid} />
+                </div>
+            )}
+        </ApiKeyManager>
     );
 };
 

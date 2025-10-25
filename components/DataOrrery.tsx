@@ -145,7 +145,6 @@ const DataOrrery: React.FC<DataOrreryProps> = ({ resources, handleLinkClick }) =
                 {/* Tooltip */}
                 <div 
                     className="absolute bottom-full mb-3 w-max max-w-[200px] p-3 text-sm text-slate-200 bg-slate-900 border border-slate-700 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                    style={counterAnimationStyle}
                 >
                     <p className="font-bold text-base">{link.name}</p>
 
