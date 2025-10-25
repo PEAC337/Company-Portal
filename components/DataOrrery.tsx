@@ -34,7 +34,7 @@ interface HoveredObject {
 // --- Component Props ---
 interface DataOrreryProps {
   resources: ResourceCategory[];
-  handleLinkClick: (event: React.MouseEvent<HTMLDivElement>, url: string) => void;
+  handleLinkClick: (event: React.MouseEvent<HTMLElement>, url: string) => void;
 }
 
 // --- Constants ---
@@ -59,6 +59,18 @@ const iconMap: { [key: string]: React.FC<React.SVGProps<SVGSVGElement>> } = {
   default: ExternalLinkIcon,
 };
 
+const STATUS_CONFIG = {
+  operational: { color: new THREE.Color(0x0ea5e9), speedMultiplier: 1, pulse: false, flicker: false },
+  degraded: { color: new THREE.Color(0xf59e0b), speedMultiplier: 0.6, pulse: true, flicker: false },
+  outage: { color: new THREE.Color(0xef4444), speedMultiplier: 0.2, pulse: true, flicker: true },
+};
+
+const statusDisplay: { [key: string]: { label: string; colorClass: string } } = {
+  operational: { label: 'Operational', colorClass: 'bg-sky-500' },
+  degraded: { label: 'Degraded', colorClass: 'bg-amber-500' },
+  outage: { label: 'Outage', colorClass: 'bg-red-500' },
+};
+
 
 // --- Main Component ---
 const DataOrrery: React.FC<DataOrreryProps> = ({ resources, handleLinkClick }) => {
@@ -67,6 +79,28 @@ const DataOrrery: React.FC<DataOrreryProps> = ({ resources, handleLinkClick }) =
   const [hoveredObject, setHoveredObject] = useState<HoveredObject | null>(null);
   
   const hoveredInstanceRef = useRef<{ id: number | null, data: PlanetData | null }>({ id: null, data: null });
+  const resourcesMapRef = useRef<Map<string, { status: ResourceLink['status']; isVisible: boolean }>>(new Map());
+
+  useEffect(() => {
+    const newMap = new Map();
+    const visibleUrls = new Set(resources.flatMap(c => c.links.map(l => l.url)));
+
+    RESOURCE_CATEGORIES.forEach(category => {
+      category.links.forEach(link => {
+        const isVisible = visibleUrls.has(link.url);
+        let status: ResourceLink['status'] = 'operational';
+        if (isVisible) {
+          const visibleLink = resources.flatMap(c => c.links).find(l => l.url === link.url);
+          if (visibleLink) {
+            status = visibleLink.status;
+          }
+        }
+        newMap.set(link.url, { status, isVisible });
+      });
+    });
+
+    resourcesMapRef.current = newMap;
+  }, [resources]);
 
   useEffect(() => {
     if (!mountRef.current) return;
@@ -77,7 +111,6 @@ const DataOrrery: React.FC<DataOrreryProps> = ({ resources, handleLinkClick }) =
     const allLinks = RESOURCE_CATEGORIES.flatMap(category =>
       category.links.map(link => ({ ...link, category: category.category }))
     );
-    const visibleLinkUrls = new Set(resources.flatMap(c => c.links.map(l => l.url)));
 
     const planetInstanceData: PlanetData[] = allLinks.map((link, index) => {
       const orbitConf = ORBIT_CONFIG.find(o => o.category === link.category)!;
@@ -146,20 +179,11 @@ const DataOrrery: React.FC<DataOrreryProps> = ({ resources, handleLinkClick }) =
     const planetMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true });
     const planets = new THREE.InstancedMesh(planetGeometry, planetMaterial, planetInstanceData.length);
     planets.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    if (planets.instanceColor) {
-      planets.instanceColor.setUsage(THREE.DynamicDrawUsage);
-    }
+    if (planets.instanceColor) planets.instanceColor.setUsage(THREE.DynamicDrawUsage);
     scene.add(planets);
 
     const matrix = new THREE.Matrix4();
-    const defaultColor = new THREE.Color(0x94a3b8);
-    const hoverColor = new THREE.Color(0xfacc15);
-
-    planetInstanceData.forEach((data) => {
-      matrix.setPosition(data.radius * Math.cos(data.initialAngle), 0, data.radius * Math.sin(data.initialAngle));
-      planets.setMatrixAt(data.instanceId, matrix);
-      planets.setColorAt(data.instanceId, defaultColor);
-    });
+    const hoverColor = new THREE.Color(0x34d399); // A bright green for hover
 
     // --- Interaction ---
     const raycaster = new THREE.Raycaster();
@@ -195,61 +219,74 @@ const DataOrrery: React.FC<DataOrreryProps> = ({ resources, handleLinkClick }) =
 
       const delta = clock.getDelta();
       const elapsedTime = clock.getElapsedTime();
-
       hub.rotation.y += delta * 0.1;
 
       // Update Instances
-      planetInstanceData.forEach((data) => {
-        if (!visibleLinkUrls.has(data.url)) {
-          matrix.makeScale(0, 0, 0); // Hide by scaling to zero
+      planetInstanceData.forEach((data, i) => {
+        const resourceInfo = resourcesMapRef.current.get(data.url);
+        
+        if (!resourceInfo || !resourceInfo.isVisible) {
+          matrix.makeScale(0, 0, 0);
         } else {
-          const angularSpeed = 0.5 / Math.sqrt(data.radius);
+          const statusConfig = STATUS_CONFIG[resourceInfo.status];
+          const angularSpeed = (0.5 / Math.sqrt(data.radius)) * statusConfig.speedMultiplier;
           const newAngle = data.initialAngle + angularSpeed * elapsedTime;
-          matrix.makeTranslation(
-            data.radius * Math.cos(newAngle),
-            0,
-            data.radius * Math.sin(newAngle)
-          );
+
+          const position = new THREE.Vector3(data.radius * Math.cos(newAngle), 0, data.radius * Math.sin(newAngle));
+          const quaternion = new THREE.Quaternion();
+
+          let scale = 1.0;
+          if (statusConfig.pulse) scale = 1.0 + Math.sin(elapsedTime * 5) * 0.15;
+          if (statusConfig.flicker && Math.random() > 0.8) scale *= 0.5;
+          const scaleVec = new THREE.Vector3(scale, scale, scale);
+
+          matrix.compose(position, quaternion, scaleVec);
         }
-        planets.setMatrixAt(data.instanceId, matrix);
+        planets.setMatrixAt(i, matrix);
+        
+        if (resourceInfo) {
+          planets.setColorAt(i, STATUS_CONFIG[resourceInfo.status].color);
+        }
       });
-      planets.instanceMatrix.needsUpdate = true;
       
-      // Raycasting
+      // Raycasting for Hover
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObject(planets);
 
+      let currentHoverId: number | null = null;
       if (intersects.length > 0 && intersects[0].instanceId !== undefined) {
         const instanceId = intersects[0].instanceId;
-        if (hoveredInstanceRef.current.id !== instanceId) {
-          if (hoveredInstanceRef.current.id !== null) {
-            planets.setColorAt(hoveredInstanceRef.current.id, defaultColor);
-          }
-          hoveredInstanceRef.current = { id: instanceId, data: planetInstanceData[instanceId] };
-          planets.setColorAt(instanceId, hoverColor);
-          if (planets.instanceColor) {
-            planets.instanceColor.needsUpdate = true;
-          }
-
-          const screenPosition = intersects[0].point.clone().project(camera);
-          setHoveredObject({
-            data: planetInstanceData[instanceId],
-            screenPosition: {
-              x: (screenPosition.x + 1) / 2 * currentMount.clientWidth,
-              y: (-screenPosition.y + 1) / 2 * currentMount.clientHeight,
-            }
-          });
-        }
-      } else {
-        if (hoveredInstanceRef.current.id !== null) {
-          planets.setColorAt(hoveredInstanceRef.current.id, defaultColor);
-          if (planets.instanceColor) {
-            planets.instanceColor.needsUpdate = true;
-          }
-          hoveredInstanceRef.current = { id: null, data: null };
-          setHoveredObject(null);
+        const resourceInfo = resourcesMapRef.current.get(planetInstanceData[instanceId].url);
+        if (resourceInfo && resourceInfo.isVisible) {
+          currentHoverId = instanceId;
         }
       }
+
+      if (hoveredInstanceRef.current.id !== currentHoverId) {
+          hoveredInstanceRef.current = { id: currentHoverId, data: currentHoverId !== null ? planetInstanceData[currentHoverId] : null };
+
+          if (currentHoverId !== null) {
+              const instanceData = planetInstanceData[currentHoverId];
+              const resourceInfo = resourcesMapRef.current.get(instanceData.url);
+              const screenPosition = intersects[0].point.clone().project(camera);
+              setHoveredObject({
+                  data: { ...instanceData, status: resourceInfo!.status },
+                  screenPosition: {
+                      x: (screenPosition.x + 1) / 2 * currentMount.clientWidth,
+                      y: (-screenPosition.y + 1) / 2 * currentMount.clientHeight,
+                  }
+              });
+          } else {
+              setHoveredObject(null);
+          }
+      }
+
+      if (hoveredInstanceRef.current.id !== null) {
+        planets.setColorAt(hoveredInstanceRef.current.id, hoverColor);
+      }
+      
+      planets.instanceMatrix.needsUpdate = true;
+      if (planets.instanceColor) planets.instanceColor.needsUpdate = true;
 
       controls.update();
       composer.render();
@@ -274,7 +311,6 @@ const DataOrrery: React.FC<DataOrreryProps> = ({ resources, handleLinkClick }) =
       if (renderer.domElement.parentElement === currentMount) {
         currentMount.removeChild(renderer.domElement);
       }
-      // Dispose of Three.js objects
       scene.traverse(object => {
         if (object instanceof THREE.Mesh) {
           object.geometry.dispose();
@@ -286,7 +322,7 @@ const DataOrrery: React.FC<DataOrreryProps> = ({ resources, handleLinkClick }) =
         }
       });
     };
-  }, [isAnimationPaused, resources]);
+  }, [isAnimationPaused, handleLinkClick]);
 
   const IconComponent = hoveredObject ? iconMap[hoveredObject.data.icon || 'default'] : null;
 
@@ -310,7 +346,10 @@ const DataOrrery: React.FC<DataOrreryProps> = ({ resources, handleLinkClick }) =
             </div>
             <div>
               <p className="font-bold text-base text-slate-100">{hoveredObject.data.name}</p>
-              <p className="text-xs text-amber-500 font-semibold mb-1">{hoveredObject.data.category}</p>
+              <div className="flex items-center space-x-2 my-1">
+                <span className={`h-2.5 w-2.5 rounded-full ${statusDisplay[hoveredObject.data.status].colorClass}`}></span>
+                <p className="text-xs text-slate-300 font-semibold uppercase tracking-wider">{statusDisplay[hoveredObject.data.status].label}</p>
+              </div>
               <p className="text-xs text-slate-400">{hoveredObject.data.description}</p>
             </div>
           </div>

@@ -1,15 +1,15 @@
 
 {
-  "short_name": "Ministry Portal",
-  "name": "U.S. Ministry Portal",
+  "short_name": "Data Orrery",
+  "name": "Arcane Orrery of Data",
   "icons": [
     {
-      "src": "https://i.ibb.co/hLqjC0F/The-United-States-Ministry-of-Defense.png",
+      "src": "https://i.ibb.co/9g3fLg2/crystal-ball.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "https://i.ibb.co/hLqjC0F/The-United-States-Ministry-of-Defense.png",
+      "src": "https://i.ibb.co/9g3fLg2/crystal-ball.png",
       "type": "image/png",
       "sizes": "512x512"
     }

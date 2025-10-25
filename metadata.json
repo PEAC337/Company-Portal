@@ -1,7 +1,5 @@
 {
-  "name": "U.S. Ministry Portal",
-  "description": "A dedicated portal providing secure access to the U.S. Ministry's internal Google Site and resources.",
-  "requestFramePermissions": [
-    "geolocation"
-  ]
+  "name": "Arcane Orrery of Data",
+  "description": "A dynamic visualization of service statuses, represented as an 'Arcane Orrery' where elemental forms orbit a central core, changing their behavior based on health.",
+  "requestFramePermissions": []
 }

@@ -21,12 +21,12 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange }) => {
           <a
             href="/"
             onClick={(e) => { e.preventDefault(); onSearchChange(''); }}
-            aria-label="U.S. Ministry Portal, go to homepage"
+            aria-label="Arcane Orrery, go to homepage"
             className="flex items-center space-x-4 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-950 focus:ring-amber-500 rounded-lg p-1 -ml-1"
           >
             <CompanyLogo className="h-10 w-10 md:h-12 md:w-12" />
             <span className="font-brand text-xl md:text-2xl font-bold text-gray-100 tracking-wider">
-              U.S. MINISTRY PORTAL
+              ARCANE ORRERY
             </span>
           </a>
 
@@ -40,12 +40,12 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange }) => {
                 id="search-desktop"
                 name="search-desktop"
                 className="block w-full bg-blue-900 border border-blue-700 rounded-md py-2 pl-10 pr-3 text-base text-gray-200 placeholder-gray-400 focus:outline-none focus:bg-blue-800 focus:border-amber-500 focus:ring-amber-500"
-                placeholder="Search resources..."
+                placeholder="Search services..."
                 type="search"
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}
-                aria-label="Search for resources"
-                title="Search for company resources"
+                aria-label="Search for services"
+                title="Search for services"
               />
             </div>
 
@@ -74,11 +74,11 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange }) => {
                 id="search-mobile"
                 name="search-mobile"
                 className="block w-full bg-blue-900 border border-blue-700 rounded-md py-2 pl-10 pr-3 text-base text-gray-200 placeholder-gray-400 focus:outline-none focus:bg-blue-800 focus:border-amber-500 focus:ring-amber-500"
-                placeholder="Search resources..."
+                placeholder="Search services..."
                 type="search"
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}
-                aria-label="Search for resources"
+                aria-label="Search for services"
                 autoFocus
               />
             </div>
