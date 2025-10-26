@@ -1,0 +1,14 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="XFile" type="Application" factoryName="Application" activateToolWindowBeforeRun="false">
+    <option name="ALTERNATIVE_JRE_PATH" value="Android API 36.1, CANARY preview, extension level 20 Platform" />
+    <option name="MAIN_CLASS_NAME" value="drawable." />
+    <module name="Company-Portal" />
+    <option name="PROGRAM_PARAMETERS" value="$MODULE_WORKING_DIR$$FileNameWithoutAllExtensions$" />
+    <selectedOptions>
+      <option name="environmentVariables" visible="false" />
+    </selectedOptions>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
