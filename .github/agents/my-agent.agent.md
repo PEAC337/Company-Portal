@@ -6,6 +6,8 @@
 
 name:
 description:
+branches:
+  - main
 ---
 
 # My Agent
