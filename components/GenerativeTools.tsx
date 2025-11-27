@@ -215,7 +215,11 @@ const VideoGeneratorFromImage: React.FC<{ onKeyInvalid: () => void }> = ({ onKey
                 throw new Error("Video generation succeeded, but no download link was found.");
             }
             
-            const response = await fetch(`${downloadLink}&key=${process.env.API_KEY!}`);
+            const response = await fetch(downloadLink, {
+                headers: {
+                    'x-goog-api-key': process.env.API_KEY!,
+                },
+            });
             if (!response.ok) {
                 throw new Error(`Failed to download video: ${response.statusText}`);
             }
